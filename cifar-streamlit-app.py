@@ -3,7 +3,7 @@ from fastai.vision.all import *
 
 def run_app():
     # Load the exported learner
-    learn = load_learner(r'D:\Northeastern\EAI6010\cifar_learner.pkl')
+    learn = load_learner(r'cifar_learner.pkl')
 
     # Streamlit app title
     st.title("CIFAR Image Classifier")
