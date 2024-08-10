@@ -25,7 +25,7 @@ def load_learner_compatible(filepath):
 
 def run_app():
     # Load the exported learner and fix paths if needed
-    learn = load_learner_compatible('cifar_learner.pkl')
+    learn = load_learner_compatible(r'cifar_learner.pkl')
     
     # Streamlit app title
     st.title("CIFAR Image Classifier")
