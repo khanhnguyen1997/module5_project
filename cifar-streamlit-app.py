@@ -1,30 +1,33 @@
 from fastai.vision.all import *
 from pathlib import Path, PosixPath, WindowsPath
+import streamlit as st
+import torch
 
-def load_learner_compatible_with_paths(filepath, cpu=True):
-    # Function to map location and handle any path issues
+def fix_paths(obj):
+    if isinstance(obj, WindowsPath):
+        return PosixPath(obj)
+    elif isinstance(obj, dict):
+        return {k: fix_paths(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [fix_paths(i) for i in obj]
+    else:
+        return obj
+
+def load_learner_compatible(filepath, cpu=True):
     map_location = 'cpu' if cpu else default_device()
-
-    # Load the object using torch.load
-    with open(filepath, 'rb') as f:
-        data = torch.load(f, map_location=map_location)
     
-    # Recursively replace WindowsPath with PosixPath if needed
-    def replace_path(obj):
-        if isinstance(obj, WindowsPath):
-            return PosixPath(obj)
-        elif isinstance(obj, dict):
-            return {k: replace_path(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [replace_path(i) for i in obj]
-        else:
-            return obj
-
-    return replace_path(data)
+    # Load the model
+    with open(filepath, 'rb') as f:
+        learner = torch.load(f, map_location=map_location)
+    
+    # Fix any WindowsPath issues
+    learner = fix_paths(learner)
+    
+    return learner
 
 def run_app():
     # Load the exported learner and fix paths if needed
-    learn = load_learner_compatible_with_paths('cifar_learner.pkl')
+    learn = load_learner_compatible('cifar_learner.pkl')
 
     # Streamlit app title
     st.title("CIFAR Image Classifier")
