@@ -1,9 +1,13 @@
-import streamlit as st
 from fastai.vision.all import *
+from pathlib import Path, PosixPath
 
 def run_app():
-    # Load the exported learner
-    learn = load_learner(r'cifar_learner.pkl')
+    # Override WindowsPath to PosixPath if running on a non-Windows system
+    def convert_path(filepath):
+        return PosixPath(filepath) if os.name != 'nt' else Path(filepath)
+
+    # Load the exported learner, converting the path if necessary
+    learn = load_learner(convert_path('cifar_learner.pkl'))
 
     # Streamlit app title
     st.title("CIFAR Image Classifier")
