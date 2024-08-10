@@ -1,21 +1,30 @@
 from fastai.vision.all import *
-import pickle
-from pathlib import Path, PosixPath
+from pathlib import Path, PosixPath, WindowsPath
 
-class CustomUnpickler(pickle.Unpickler):
-    def find_class(self, module, name):
-        if module == 'pathlib' and name == 'WindowsPath':
-            return PosixPath
-        return super().find_class(module, name)
-
-def load_learner_with_custom_unpickler(file, cpu=True):
+def load_learner_compatible_with_paths(filepath, cpu=True):
+    # Function to map location and handle any path issues
     map_location = 'cpu' if cpu else default_device()
-    with open(file, 'rb') as f:
-        return torch.load(f, map_location=map_location, pickle_module=CustomUnpickler)
+
+    # Load the object using torch.load
+    with open(filepath, 'rb') as f:
+        data = torch.load(f, map_location=map_location)
+    
+    # Recursively replace WindowsPath with PosixPath if needed
+    def replace_path(obj):
+        if isinstance(obj, WindowsPath):
+            return PosixPath(obj)
+        elif isinstance(obj, dict):
+            return {k: replace_path(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [replace_path(i) for i in obj]
+        else:
+            return obj
+
+    return replace_path(data)
 
 def run_app():
-    # Load the exported learner with the custom unpickler
-    learn = load_learner_with_custom_unpickler('cifar_learner.pkl')
+    # Load the exported learner and fix paths if needed
+    learn = load_learner_compatible_with_paths('cifar_learner.pkl')
 
     # Streamlit app title
     st.title("CIFAR Image Classifier")
