@@ -1,25 +1,10 @@
-from pathlib import PosixPath, WindowsPath
 import torch
-
-def map_windows_path_to_posix(obj):
-    if isinstance(obj, dict):
-        return {k: map_windows_path_to_posix(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [map_windows_path_to_posix(i) for i in obj]
-    elif isinstance(obj, tuple):
-        return tuple(map_windows_path_to_posix(i) for i in obj)
-    elif isinstance(obj, WindowsPath):
-        return PosixPath(str(obj))
-    return obj
+from pathlib import Path  # Used for handling file paths
+import streamlit as st  # Assuming Streamlit is being used for the app
 
 def load_learner_compatible(filepath):
     # Load the model file ensuring it works for Linux systems
-    with open(filepath, 'rb') as f:
-        learner = torch.load(f, map_location=torch.device('cpu'))
-    
-    # Recursively replace any WindowsPath with PosixPath
-    learner = map_windows_path_to_posix(learner)
-    
+    learner = torch.load(filepath, map_location=torch.device('cpu'))
     return learner
 
 def run_app():
@@ -30,7 +15,7 @@ def run_app():
     st.title("CIFAR Image Classifier")
     
     # Example of using the loaded learner
-    img = load_image("path_to_image.png")
+    img = load_image("path_to_image.png")  # Replace with actual image loading method
     pred_idx, probs = learn.predict(img)
     st.write(f"Prediction: {pred_idx}")
     st.write(f"Probability: {probs[pred_idx]:.4f}")
