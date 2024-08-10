@@ -3,7 +3,6 @@ from pathlib import Path, PosixPath, WindowsPath
 import torch
 import streamlit as st
 
-# Function to replace WindowsPath with PosixPath after loading
 def map_windows_path_to_posix(obj):
     if isinstance(obj, WindowsPath):
         return PosixPath(str(obj))
@@ -17,11 +16,11 @@ def map_windows_path_to_posix(obj):
 def load_learner_compatible(filepath, cpu=True):
     map_location = 'cpu' if cpu else default_device()
     
-    # Load the model
+    # Load the model file ensuring it works for Linux systems
     with open(filepath, 'rb') as f:
-        learner = torch.load(f, map_location=map_location, pickle_module=pickle)
+        learner = torch.load(f, map_location=map_location)
     
-    # Map WindowsPath to PosixPath
+    # Recursively replace WindowsPath with PosixPath
     learner = map_windows_path_to_posix(learner)
     
     return learner
