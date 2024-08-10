@@ -1,15 +1,16 @@
 from fastai.vision.all import *
 from pathlib import Path, PosixPath, WindowsPath
-import streamlit as st
 import torch
+import streamlit as st
 
-def fix_paths(obj):
+# Function to replace WindowsPath with PosixPath after loading
+def map_windows_path_to_posix(obj):
     if isinstance(obj, WindowsPath):
-        return PosixPath(obj)
+        return PosixPath(str(obj))
     elif isinstance(obj, dict):
-        return {k: fix_paths(v) for k, v in obj.items()}
+        return {k: map_windows_path_to_posix(v) for k, v in obj.items()}
     elif isinstance(obj, list):
-        return [fix_paths(i) for i in obj]
+        return [map_windows_path_to_posix(i) for i in obj]
     else:
         return obj
 
@@ -18,10 +19,10 @@ def load_learner_compatible(filepath, cpu=True):
     
     # Load the model
     with open(filepath, 'rb') as f:
-        learner = torch.load(f, map_location=map_location)
+        learner = torch.load(f, map_location=map_location, pickle_module=pickle)
     
-    # Fix any WindowsPath issues
-    learner = fix_paths(learner)
+    # Map WindowsPath to PosixPath
+    learner = map_windows_path_to_posix(learner)
     
     return learner
 
